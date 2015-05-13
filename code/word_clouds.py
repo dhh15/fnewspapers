@@ -2,6 +2,7 @@ from os import path
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import codecs
+import sys
 
 def get_frequencies(filename):
     f = codecs.open(filename, 'r', 'utf-8')
