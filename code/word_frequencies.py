@@ -78,8 +78,11 @@ def identify_keywords(freqs):
         if word not in bl_freqs:
             continue
         bl_frac = float(bl_freqs[word]) / bl_total
-        diff = frac - bl_frac
-        #diff = frac / bl_frac
+        #diff = frac - bl_frac
+        if bl_frac > 0.0000001:
+            diff = frac / bl_frac
+        else:
+            diff = 1
         res.append((diff, word, frac, bl_frac))
     res = sorted(res, key=lambda tup: tup[0])[::-1]
     return res
@@ -88,14 +91,25 @@ if __name__ == "__main__":
     #print socialist_issns()
     #files = get_filenames(wanted_issn="fk14802")
     all_issns = ["fk14802", "fk10276", "fk10276", "1458-0926", "fk14794", "fk14940", "fk10173", "fk10459", "fk14854", "fk10105", "fk10445", "fk25048", "fk14799", "fk14860", "fk10401", "fk10206", "fk10180", "fk10397"]
-    files = get_filenames(wanted_issns=all_issns, max_n=10000)
+    files = get_filenames(wanted_issns=all_issns, max_n=50000)
     print files[:5]
     freqs = get_common_words(files)
     kws = identify_keywords(freqs)
     date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
     date_str = re.sub(":", "", date_str)
+    
     fout = codecs.open('../results/keywords_%s.csv' % date_str, 'w', 'utf-8')
-    for res in kws:
-        fout.write(("%s\t%f\t%f\t%f\n" % (res[1], 1000*res[0], 1000*res[2], 1000*res[3])))#.encode('utf-8'))
+    fout.write("Word,RelativeFreq,SocialistFreq,CorpusFreq\n")
+    N = 1000
+    for res in kws[:N]:
+        fout.write(("%s,%f,%f,%f\n" % (res[1], 1000*res[0], 1000*res[2], 1000*res[3])))#.encode('utf-8'))
+    fout.close()
+
+    fout2 = codecs.open('../results/negative_keywords_%s.csv' % date_str, 'w', 'utf-8')
+    fout2.write("Word,RelativeFreq,SocialistFreq,CorpusFreq\n")
+    for i in range(1,min(N,len(kws))):
+        res = kws[-i]
+        fout2.write(("%s,%f,%f,%f\n" % (res[1], 1000*res[0], 1000*res[2], 1000*res[3])))#.encode('utf-8'))
+    fout2.close()
     #for (i,fr) in enumerate(freqs):
     #    print (u"%d\t%d\t%s" % (i+1, fr[1], fr[0])).encode('utf-8')
