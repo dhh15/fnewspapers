@@ -4,6 +4,7 @@ import codecs
 import re
 import numpy as np
 import cPickle as pickle
+import datetime as dt
 
 DATA_DIR = "../data/"
 DATA_DIR2 = "/srv/data/fnewspapers/"
@@ -22,7 +23,7 @@ def get_tokens(filenames):
         tokens = text.split()
         n_words += len(tokens)
         for token in tokens:
-            if len(token) > 3:
+            if len(token) > 2:
                 yield token
 
 def get_common_words(filenames, n=10000):
@@ -41,10 +42,11 @@ def socialist_issns():
         sis.append(parts[2])
     return sis
 
-def get_filenames(wanted_issn=None, max_n=1000):
+def get_filenames(wanted_issns=None, max_n=100000):
     print "Reading newspaper files..."
     fname = DATA_DIR2 + 'nlf_newspapers_fin.csv'
     names = []
+    wanted_issns = set(wanted_issns)
     with open(fname, 'r') as f:
         i = 0
         for line in f:
@@ -54,19 +56,21 @@ def get_filenames(wanted_issn=None, max_n=1000):
             parts = line.split(',')
             name = parts[0]
             issn = parts[1]
-            if wanted_issn is None or issn == wanted_issn:
+            if wanted_issns is None or issn in wanted_issns:
                 names.append(name)
             i += 1
     print "%d matching files in total." % len(names)
     print "Read."
     if len(names) > max_n:
+        import random
+        random.shuffle(names)
         return names[:max_n]
     else:
         return names
 
 def identify_keywords(freqs):
     print "Loading baseline frequencies..."
-    (bl_freqs, bl_total) = pickle.load(open("/srv/work/unigrams.pckl", "rb"))
+    (bl_freqs, bl_total) = pickle.load(open("/srv/work/unigrams3utf8.pckl", "rb"))
     print "Loaded."
     res = []
     for (word, count) in freqs:
@@ -74,19 +78,24 @@ def identify_keywords(freqs):
         if word not in bl_freqs:
             continue
         bl_frac = float(bl_freqs[word]) / bl_total
-        #diff = frac - bl_frac
-        diff = frac / bl_frac
+        diff = frac - bl_frac
+        #diff = frac / bl_frac
         res.append((diff, word, frac, bl_frac))
-    res = sorted(res, key=lambda tup: tup[0])
+    res = sorted(res, key=lambda tup: tup[0])[::-1]
     return res
 
 if __name__ == "__main__":
     #print socialist_issns()
-    files = get_filenames(wanted_issn="fk14802")
+    #files = get_filenames(wanted_issn="fk14802")
+    all_issns = ["fk14802", "fk10276", "fk10276", "1458-0926", "fk14794", "fk14940", "fk10173", "fk10459", "fk14854", "fk10105", "fk10445", "fk25048", "fk14799", "fk14860", "fk10401", "fk10206", "fk10180", "fk10397"]
+    files = get_filenames(wanted_issns=all_issns, max_n=10000)
     print files[:5]
     freqs = get_common_words(files)
     kws = identify_keywords(freqs)
+    date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
+    date_str = re.sub(":", "", date_str)
+    fout = codecs.open('../results/keywords_%s.csv' % date_str, 'w', 'utf-8')
     for res in kws:
-        print "%s\t%f\t%f\t%f" % (res[1], res[0], res[2], res[3])
+        fout.write(("%s\t%f\t%f\t%f\n" % (res[1], 1000*res[0], 1000*res[2], 1000*res[3])))#.encode('utf-8'))
     #for (i,fr) in enumerate(freqs):
     #    print (u"%d\t%d\t%s" % (i+1, fr[1], fr[0])).encode('utf-8')
