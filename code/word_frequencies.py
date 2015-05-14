@@ -191,17 +191,23 @@ def temporal_analysis():
         plt.clf()
         plt.plot(ts[:-1], soc_freqs[:,i], '-x')
         plt.plot(ts[:-1], other_freqs[:,i], '-o')
+        max_y = max(np.max(soc_freqs[:,i]), np.max(other_freqs[:,i]))
+        plt.ylim((0, max_y*1.05))
         plt.xlabel('Year')
         plt.ylabel('Frequency')
         plt.title(word)
-        plt.legend(['Socialist', 'Others'], loc='upper left')
+        plt.legend(['Socialist', 'Others'], loc='best')
         plt.savefig('../plots/%s.png' % word)
-        pickle.dump((ts,soc_freqs,other_freqs,word), open('../plot_data/%s.pckl', 'wb'))
+        date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
+        date_str = re.sub(":", "", date_str)
+        pickle.dump((ts,soc_freqs,other_freqs,word), open('../plot_data/%s.pckl' % date_str, 'wb'))
     save_csv(words, soc_freqs)
     save_csv(words, other_freqs)
 
 def save_csv(labels, X):
-    with codecs.open('../data/timeseries_%s.csv', 'w', 'utf8') as f:
+    date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
+    date_str = re.sub(":", "", date_str)
+    with codecs.open('../data/timeseries_%s.csv' % date_str, 'w', 'utf8') as f:
         date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
         date_str = re.sub(":", "", date_str)
         f.write(",".join(labels) + "\n")
