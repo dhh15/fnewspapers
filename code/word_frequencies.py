@@ -200,20 +200,26 @@ def temporal_analysis():
         plt.savefig('../plots/%s.png' % word)
         date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
         date_str = re.sub(":", "", date_str)
-        pickle.dump((ts,soc_freqs,other_freqs,word), open('../plot_data/%s.pckl' % date_str, 'wb'))
-    save_csv(words, soc_freqs)
-    save_csv(words, other_freqs)
+    pickle.dump((ts,soc_freqs,other_freqs,word), open('../plot_data/%s.pckl' % date_str, 'wb'))
+    save_csv2(words, soc_freqs, "socialist")
+    save_csv2(words, other_freqs, "others")
 
-def save_csv(labels, X):
-    date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
-    date_str = re.sub(":", "", date_str)
-    with codecs.open('../data/timeseries_%s.csv' % date_str, 'w', 'utf8') as f:
-        date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
-        date_str = re.sub(":", "", date_str)
+def save_csv(labels, X, title):
+    with codecs.open('../data/timeseries_%s.csv' % title, 'w', 'utf8') as f:
         f.write(",".join(labels) + "\n")
         for i in range(X.shape[0]):
             vals = [str(val) for val in X[i,:]]
             f.write(",".join(vals) + "\n")
+
+def save_csv2(labels, X, ts, title):
+    with codecs.open('../data/timeseries2_%s.csv' % title, 'w', 'utf8') as f:
+        f.write(",".join(labels) + "\n")
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                freq = X[i,j]
+                year = ts[i].year
+                word = labes[j]
+                f.write("%d,%s,%f\n" % (year, word, freq))
 
 def keyword_analysis():
     #print socialist_issns()
