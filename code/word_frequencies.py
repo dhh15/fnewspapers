@@ -200,9 +200,11 @@ def temporal_analysis():
         plt.savefig('../plots/%s.png' % word)
         date_str = re.sub(" ", "T", str(dt.datetime.now()))[:-7]
         date_str = re.sub(":", "", date_str)
-    pickle.dump((ts,soc_freqs,other_freqs,word), open('../plot_data/%s.pckl' % date_str, 'wb'))
-    save_csv2(words, soc_freqs, "socialist")
-    save_csv2(words, other_freqs, "others")
+    pickle.dump((ts,soc_freqs,other_freqs,words), open('../plot_data/%s.pckl' % date_str, 'wb'))
+    save_csv2(words, soc_freqs, ts, "socialist")
+    save_csv2(words, other_freqs, ts, "others")
+    save_csv(words, soc_freqs, "socialist")
+    save_csv(words, other_freqs, "others")
 
 def save_csv(labels, X, title):
     with codecs.open('../data/timeseries_%s.csv' % title, 'w', 'utf8') as f:
@@ -218,7 +220,7 @@ def save_csv2(labels, X, ts, title):
             for j in range(X.shape[1]):
                 freq = X[i,j]
                 year = ts[i].year
-                word = labes[j]
+                word = labels[j]
                 f.write("%d,%s,%f\n" % (year, word, freq))
 
 def keyword_analysis():
